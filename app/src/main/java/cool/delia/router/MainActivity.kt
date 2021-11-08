@@ -1,3 +1,6 @@
+/*
+ * 2016-2021 ©MissDelia 版权所有
+ */
 package cool.delia.router
 
 import androidx.appcompat.app.AppCompatActivity
@@ -10,6 +13,5 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        DeliaRouter.init()
     }
 }

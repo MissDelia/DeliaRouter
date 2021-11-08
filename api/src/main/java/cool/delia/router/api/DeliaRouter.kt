@@ -1,10 +1,11 @@
 /*
- * 2016-2021 ©JMX Consumer Finance 版权所有
+ * 2016-2021 ©MissDelia 版权所有
  */
 package cool.delia.router.api
 
 import android.util.Log
-import java.util.HashMap
+import cool.delia.router.api.action.Action
+import java.util.*
 
 /**
  * ## 路由功能主要实现类
@@ -21,13 +22,18 @@ object DeliaRouter {
 
     fun init() {
         Log.v("DeliaRouter", "DeliaRouter start initialization")
-        val clz = Class.forName("${javaClass.canonicalName?.replace(javaClass.simpleName, "")}DeliaRouterAssist")
-        val method = clz.getMethod("initRouter")
-        @Suppress("UNCHECKED_CAST")
-        mActions = method.invoke(clz.newInstance()) as HashMap<String, Action>
+        try {
+            val clz = Class.forName("${javaClass.canonicalName?.replace(javaClass.simpleName, "")}DeliaRouterAssist")
+            val method = clz.getMethod("initRouter")
+            @Suppress("UNCHECKED_CAST")
+            mActions = method.invoke(clz.newInstance()) as HashMap<String, Action>
+        } catch (e: Exception) {
+            Log.v("DeliaRouter", "DeliaRouter initialization failed because ${e.message}")
+        }
         Log.v("DeliaRouter", "DeliaRouter initialized")
     }
 
+    @Deprecated(message = "This method should not be called by outside code")
     fun registerAction(action: String, mAction: Action) {
         if (mActions.containsKey(action)) {
             return
@@ -35,28 +41,10 @@ object DeliaRouter {
         mActions[action] = mAction
     }
 
-//    fun sendMessage(c: Context?, mSRouterRequest: SRouterRequest): SRouterResponse {
-//        val mSRouterResponse = SRouterResponse()
-//        val mSAction: SAction? = findRequest(mSRouterRequest)
-//        if (mSAction != null) {
-//            val mObject: Any = mSAction.startAction(c, mSRouterRequest.getData())
-//            mSRouterResponse.setStatus(
-//                SRouterResponse.SUCCESS_CODE, SRouterResponse.SUCCESS_DESC, mObject
-//            )
-//        } else {
-//            mSRouterResponse.setStatus(
-//                SRouterResponse.Fail_CODE,
-//                SRouterResponse.Fail_DESC,
-//                "can not find this action,check to see if you have been registered!"
-//            )
-//        }
-//        return mSRouterResponse
-//    }
-//
-//    private fun findRequest(mSRouterRequest: SRouterRequest): SAction? {
-//        val action: String = mSRouterRequest.getAction()
-//        return if (mActions.containsKey(action)) {
-//            mActions[action]
-//        } else null
-//    }
+    /**
+     * 采用类建造者模式
+     */
+    fun withPath(path: String): RouterObject {
+        return RouterObject(path)
+    }
 }

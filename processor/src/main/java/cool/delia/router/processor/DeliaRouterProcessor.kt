@@ -1,5 +1,5 @@
 /*
- * 2016-2021 ©JMX Consumer Finance 版权所有
+ * 2016-2021 ©MissDelia 版权所有
  */
 package cool.delia.router.processor
 
@@ -61,7 +61,7 @@ class DeliaRouterProcessor: AbstractProcessor() {
             }
             // 构造Assist类的init方法体
             val stringClz = ClassName.bestGuess("kotlin.String")
-            val actionClz = ClassName.bestGuess("cool.delia.router.api.Action")
+            val actionClz = ClassName.bestGuess("cool.delia.router.api.action.Action")
             val methodBody = CodeBlock.builder()
                 .addStatement("val routerMap = %T<%T, %T>()", HashMap::class.java, stringClz, actionClz)
 
@@ -93,7 +93,7 @@ class DeliaRouterProcessor: AbstractProcessor() {
         val assistClass = "DeliaRouterAssist"
         val returnType = HashMap::class.asClassName().parameterizedBy(
             ClassName.bestGuess("kotlin.String"),
-            ClassName.bestGuess("cool.delia.router.api.Action")
+            ClassName.bestGuess("cool.delia.router.api.action.Action")
         )
         return FileSpec.builder(assistPackage, assistClass)
             .addType(
@@ -119,6 +119,7 @@ class DeliaRouterProcessor: AbstractProcessor() {
             ClassName.bestGuess("kotlin.String"),
             Any::class.asTypeName()
         )
+        val toBundleMember = MemberName("cool.delia.router.api.util.MapUtil.Companion", "requestToBundle")
         val packageName = mElementUtils.getPackageOf(element).qualifiedName.toString()
         val newClassName = "${element.simpleName}\$\$Action"
         val annotation = element.getAnnotation(Router::class.java)
@@ -141,12 +142,14 @@ class DeliaRouterProcessor: AbstractProcessor() {
                                         "val i = %T(context, ${element.simpleName}::class.java)",
                                         ClassName.bestGuess("android.content.Intent")
                                     )
+                                    .addStatement("i.putExtras(requestData.%M())", toBundleMember)
                                     .addStatement("context.startActivity(i)")
                                     .nextControlFlow("else")
                                     .addStatement(
                                         "val i = %T(context, ${element.simpleName}::class.java)",
                                         ClassName.bestGuess("android.content.Intent")
                                     )
+                                    .addStatement("i.putExtras(requestData.%M())", toBundleMember)
                                     .addStatement("i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)")
                                     .addStatement("context.startActivity(i)")
                                     .endControlFlow()
