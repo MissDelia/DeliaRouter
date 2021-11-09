@@ -6,6 +6,7 @@ package cool.delia.router.api
 import android.util.Log
 import cool.delia.router.api.action.Action
 import java.util.*
+import kotlin.jvm.internal.Reflection
 
 /**
  * ## 路由功能主要实现类
@@ -23,10 +24,11 @@ object DeliaRouter {
     fun init() {
         Log.v("DeliaRouter", "DeliaRouter start initialization")
         try {
-            val clz = Class.forName("${javaClass.canonicalName?.replace(javaClass.simpleName, "")}DeliaRouterAssist")
-            val method = clz.getMethod("initRouter")
-            @Suppress("UNCHECKED_CAST")
-            mActions = method.invoke(clz.newInstance()) as HashMap<String, Action>
+//            val clz = Class.forName("${javaClass.canonicalName?.replace(javaClass.simpleName, "")}DeliaRouterAssist")
+//            val method = clz.getMethod("initRouter")
+//            @Suppress("UNCHECKED_CAST")
+//            mActions = method.invoke(clz.newInstance()) as HashMap<String, Action>
+
         } catch (e: Exception) {
             Log.v("DeliaRouter", "DeliaRouter initialization failed because ${e.message}")
         }

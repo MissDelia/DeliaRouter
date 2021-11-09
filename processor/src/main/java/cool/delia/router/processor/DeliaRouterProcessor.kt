@@ -59,24 +59,14 @@ class DeliaRouterProcessor: AbstractProcessor() {
             val outputFile = File(kaptKotlinGeneratedDir).apply {
                 mkdirs()
             }
-            // 构造Assist类的init方法体
-            val stringClz = ClassName.bestGuess("kotlin.String")
             val actionClz = ClassName.bestGuess("cool.delia.router.api.action.Action")
-            val methodBody = CodeBlock.builder()
-                .addStatement("val routerMap = %T<%T, %T>()", HashMap::class.java, stringClz, actionClz)
 
             val elements = roundEnv.getElementsAnnotatedWith(Router::class.java)
             for (element in elements) {
                 val file = buildAction(element as TypeElement, actionClz)
                 // 输出Action类
                 file.writeTo(outputFile.toPath())
-                // 将path和Action的对应映射写入Assist
-                val annotation = element.getAnnotation(Router::class.java)
-                methodBody.addStatement("routerMap.put(%S, %T())", annotation.path, ClassName.bestGuess("${file.packageName}.${file.name}"))
             }
-
-            // 输出Assist类
-            buildAssist(methodBody).writeTo(outputFile.toPath())
             return true
         }
         return false
@@ -88,6 +78,7 @@ class DeliaRouterProcessor: AbstractProcessor() {
      * 生成的类为cool.delia.router.api.DeliaRouterAssist
      * 类中包含init一个方法，返回一个HashMap实例，其中包含了路由信息
      */
+    @Deprecated(message = "不需要构建辅助类")
     private fun buildAssist(methodBody: CodeBlock.Builder): FileSpec {
         val assistPackage = "cool.delia.router.api"
         val assistClass = "DeliaRouterAssist"
@@ -120,7 +111,8 @@ class DeliaRouterProcessor: AbstractProcessor() {
             Any::class.asTypeName()
         )
         val toBundleMember = MemberName("cool.delia.router.api.util.MapUtil.Companion", "requestToBundle")
-        val packageName = mElementUtils.getPackageOf(element).qualifiedName.toString()
+//        val packageName = mElementUtils.getPackageOf(element).qualifiedName.toString()
+        val packageName = "cool.delia.router.api.action.impl"
         val newClassName = "${element.simpleName}\$\$Action"
         val annotation = element.getAnnotation(Router::class.java)
         return FileSpec.builder(packageName, newClassName)
@@ -139,15 +131,17 @@ class DeliaRouterProcessor: AbstractProcessor() {
                                         ClassName.bestGuess("android.app.Activity")
                                     )
                                     .addStatement(
-                                        "val i = %T(context, ${element.simpleName}::class.java)",
-                                        ClassName.bestGuess("android.content.Intent")
+                                        "val i = %T(context, %T::class.java)",
+                                        ClassName.bestGuess("android.content.Intent"),
+                                        ClassName.bestGuess(element.qualifiedName.toString())
                                     )
                                     .addStatement("i.putExtras(requestData.%M())", toBundleMember)
                                     .addStatement("context.startActivity(i)")
                                     .nextControlFlow("else")
                                     .addStatement(
-                                        "val i = %T(context, ${element.simpleName}::class.java)",
-                                        ClassName.bestGuess("android.content.Intent")
+                                        "val i = %T(context, %T::class.java)",
+                                        ClassName.bestGuess("android.content.Intent"),
+                                        ClassName.bestGuess(element.qualifiedName.toString())
                                     )
                                     .addStatement("i.putExtras(requestData.%M())", toBundleMember)
                                     .addStatement("i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)")
