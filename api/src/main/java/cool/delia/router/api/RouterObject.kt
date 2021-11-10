@@ -4,8 +4,10 @@
 package cool.delia.router.api
 
 import android.content.Context
+import android.util.Log
 import cool.delia.router.api.action.Action
 import java.io.Serializable
+import java.lang.StringBuilder
 import java.util.HashMap
 
 /**
@@ -63,7 +65,19 @@ class RouterObject(private val path: String = "") {
     private fun findRequest(): Action? {
         return if (DeliaRouter.mActions.containsKey(path)) {
             DeliaRouter.mActions[path]
-        } else null
+        } else {
+            val pathGroup = buildPath(path.split("/"))
+            val className = "cool.delia.router.api.action.impl.$pathGroup\$\$Action"
+            var action: Action? = null
+            try {
+                val clz = Class.forName(className)
+                action = clz.newInstance() as Action
+                DeliaRouter.mActions[path] = action
+            } catch (e: Exception) {
+                Log.v("DeliaRouter", "Action initialization failed because ${e.message}")
+            }
+            action
+        }
     }
 
     /**
@@ -79,5 +93,20 @@ class RouterObject(private val path: String = "") {
         } else {
             RouterResult(RouterResult.RESULT_CODE_FAILURE)
         }
+    }
+
+    private fun buildPath(pathGroup: List<String>): String {
+        val sb = StringBuilder()
+        for (s in pathGroup) {
+            if (s == "") {
+                continue
+            }
+            val chars = s.toCharArray()
+            if (chars[0] in 'a'..'z') {
+                chars[0] = chars[0] - 32
+            }
+            sb.append(String(chars))
+        }
+        return sb.toString()
     }
 }

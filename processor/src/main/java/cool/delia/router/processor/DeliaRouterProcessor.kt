@@ -9,12 +9,14 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import cool.delia.router.annotation.Router
 import org.apache.commons.collections4.CollectionUtils
 import java.io.File
+import java.lang.StringBuilder
 import java.util.HashMap
 import javax.annotation.processing.*
 import javax.lang.model.SourceVersion
 import javax.lang.model.element.TypeElement
 import javax.lang.model.util.Elements
 import javax.lang.model.util.Types
+import javax.tools.Diagnostic
 import kotlin.collections.LinkedHashSet
 
 /**
@@ -55,19 +57,30 @@ class DeliaRouterProcessor: AbstractProcessor() {
         roundEnv: RoundEnvironment
     ): Boolean {
         if (CollectionUtils.isNotEmpty(annotations)) {
-            val kaptKotlinGeneratedDir: String = processingEnv.options["kapt.kotlin.generated"]!!
-            val outputFile = File(kaptKotlinGeneratedDir).apply {
-                mkdirs()
-            }
-            val actionClz = ClassName.bestGuess("cool.delia.router.api.action.Action")
+            try {
+//                mMessager.printMessage(Diagnostic.Kind.NOTE, "start process")
+//                mMessager.printMessage(Diagnostic.Kind.NOTE, "a ${processingEnv.options}")
+//                for (key in processingEnv.options.keys) {
+//                    mMessager.printMessage(Diagnostic.Kind.NOTE, "a $key")
+//                }
+//                val kaptKotlinGeneratedDir: String = processingEnv.options["kapt.kotlin.generated"]!!
+//                val outputFile = File(kaptKotlinGeneratedDir).apply {
+//                    mkdirs()
+//                }
+                val actionClz = ClassName.bestGuess("cool.delia.router.api.action.Action")
 
-            val elements = roundEnv.getElementsAnnotatedWith(Router::class.java)
-            for (element in elements) {
-                val file = buildAction(element as TypeElement, actionClz)
-                // 输出Action类
-                file.writeTo(outputFile.toPath())
+                val elements = roundEnv.getElementsAnnotatedWith(Router::class.java)
+                mMessager.printMessage(Diagnostic.Kind.NOTE, "elements number: ${elements.size}")
+                for (element in elements) {
+                    val file = buildAction(element as TypeElement, actionClz)
+                    // 输出Action类
+                    file.writeTo(mFiler)
+                }
+                return true
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
-            return true
+            return false
         }
         return false
     }
@@ -112,9 +125,10 @@ class DeliaRouterProcessor: AbstractProcessor() {
         )
         val toBundleMember = MemberName("cool.delia.router.api.util.MapUtil.Companion", "requestToBundle")
 //        val packageName = mElementUtils.getPackageOf(element).qualifiedName.toString()
-        val packageName = "cool.delia.router.api.action.impl"
-        val newClassName = "${element.simpleName}\$\$Action"
         val annotation = element.getAnnotation(Router::class.java)
+        val pathGroup = buildPath(annotation.path.split("/"))
+        val packageName = "cool.delia.router.api.action.impl"
+        val newClassName = "$pathGroup\$\$Action"
         return FileSpec.builder(packageName, newClassName)
             .addType(
                 TypeSpec.classBuilder(newClassName)
@@ -157,5 +171,20 @@ class DeliaRouterProcessor: AbstractProcessor() {
             )
             .build()
 
+    }
+
+    private fun buildPath(pathGroup: List<String>): String {
+        val sb = StringBuilder()
+        for (s in pathGroup) {
+            if (s == "") {
+                continue
+            }
+            val chars = s.toCharArray()
+            if (chars[0] in 'a'..'z') {
+                chars[0] = chars[0] - 32
+            }
+            sb.append(String(chars))
+        }
+        return sb.toString()
     }
 }

@@ -18,7 +18,7 @@ class MainActivity : AppCompatActivity() {
 
         findViewById<TextView>(R.id.tv_hello)
             .setOnClickListener {
-                val turn = DeliaRouter.withPath("/kotlin/main")
+                val turn = DeliaRouter.withPath("/java/main")
                     .withInteger("integer", 114514)
                     .turn(this)
                 Log.i("MainActivity", turn.resultMsg)

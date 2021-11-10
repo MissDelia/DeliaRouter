@@ -4,6 +4,7 @@
     <bytecodeTargetLevel target="1.8">
       <module name="DeliaRouter.api" target="11" />
       <module name="DeliaRouter.app" target="11" />
+      <module name="DeliaRouter.submodule-java" target="11" />
       <module name="DeliaRouter.submodule-kotlin" target="11" />
     </bytecodeTargetLevel>
   </component>
